@@ -1,0 +1,20 @@
+package config
+
+import (
+	_ "github.com/joho/godotenv/autoload"
+	"os"
+	"strings"
+)
+
+func Value(key string) string {
+	return os.Getenv(key)
+}
+
+func Exists(key string) bool {
+	_, ok := os.LookupEnv(key)
+	return ok
+}
+
+func Values(key string) []string {
+	return strings.Split(Value(key), ";")
+}
