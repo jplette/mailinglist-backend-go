@@ -2,15 +2,15 @@ package mailgun
 
 import (
 	"context"
-	"mailinglist-backend-go/config"
+	"mailinglist-backend-go/envcfg"
 	"time"
 
 	"github.com/mailgun/mailgun-go/v5"
 	"github.com/mailgun/mailgun-go/v5/mtypes"
 )
 
-var domain = config.Value("MAILGUN_DOMAIN")
-var apiKey = config.Value("MAILGUN_API_KEY")
+var domain = envcfg.Value("MAILGUN_DOMAIN")
+var apiKey = envcfg.Value("MAILGUN_API_KEY")
 
 func MailingLists() []string {
 	mg := mailgun.NewMailgun(apiKey)
