@@ -12,7 +12,7 @@ import (
 // Lists returns an [http.Handler] that returns a list of mailing lists.
 func Lists(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lists, err := mailinglist.Lists()
+		lists, err := mailinglist.Lists(false)
 
 		if err != nil {
 			httpError(w, r, lg, fmt.Errorf("failed to get lists: %w", err))
@@ -21,7 +21,13 @@ func Lists(lg *slog.Logger) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		err = json.NewEncoder(w).Encode(lists)
+		// Need to do this because the json encoder will not encode an empty array. It is nil instead
+		// Could change with "encoding/json/v2"
+		result := []mailinglist.MGMailingList{}
+		if len(lists) > 0 {
+			result = lists
+		}
+		err = json.NewEncoder(w).Encode(result)
 		if err != nil {
 			httpError(w, r, lg, fmt.Errorf("failed to get lists: %w", err))
 			return
