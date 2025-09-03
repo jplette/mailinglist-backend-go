@@ -35,6 +35,30 @@ func Lists(lg *slog.Logger) http.Handler {
 	})
 }
 
+func Subscribe(lg *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := mailinglist.Subscribe("justatest@mailgun.wohnsinn-bessungen.de", "test@jakumba.com")
+		if err != nil {
+			httpError(w, r, lg, fmt.Errorf("failed to subscribe to lists: %w", err))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+	})
+}
+
+func Unsubscribe(lg *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := mailinglist.Unsubscribe("justatest@mailgun.wohnsinn-bessungen.de", "test@jakumba.com")
+		if err != nil {
+			httpError(w, r, lg, fmt.Errorf("failed to unsubscribe from lists: %w", err))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+	})
+}
+
 func httpError(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err error) {
 	code := http.StatusInternalServerError
 	switch {

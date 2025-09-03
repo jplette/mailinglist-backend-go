@@ -46,6 +46,39 @@ func Lists(includeHidden bool) ([]MGMailingList, error) {
 	return lists, nil
 }
 
+func Subscribe(listaddress string, memberaddress string) error {
+	mg := mailgun.NewMailgun(apiKey)
+	err := mg.SetAPIBase(mailgun.APIBaseEU)
+	if err != nil {
+		return err
+	}
+
+	// The entire operation should not take longer than 30 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	subcribed := true
+
+	err = mg.CreateMember(ctx, true, listaddress, mtypes.Member{Address: memberaddress, Subscribed: &subcribed})
+	return err
+}
+
+func Unsubscribe(listaddress string, memberaddress string) error {
+	mg := mailgun.NewMailgun(apiKey)
+	err := mg.SetAPIBase(mailgun.APIBaseEU)
+	if err != nil {
+		return err
+	}
+
+	// The entire operation should not take longer than 30 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	err = mg.DeleteMember(ctx, memberaddress, listaddress)
+
+	return err
+}
+
 func isSubscriptable(list *mtypes.MailingList) bool {
 	blocked := envcfg.Values("MAILGUN_BLOCKED_MAILING_LISTS")
 	return !slices.Contains(blocked, list.Address)
