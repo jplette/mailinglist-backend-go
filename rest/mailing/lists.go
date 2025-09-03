@@ -68,6 +68,8 @@ func httpError(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err erro
 		code = http.StatusConflict
 	case errors.Is(err, mailinglist.ErrNotFound):
 		code = http.StatusNotFound
+	case errors.Is(err, mailinglist.ErrForbidden):
+		code = http.StatusForbidden
 	}
 	if code == http.StatusInternalServerError {
 		lg.ErrorContext(r.Context(), "internal", "error", err)

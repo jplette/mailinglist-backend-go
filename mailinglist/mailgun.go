@@ -37,9 +37,9 @@ func Lists(includeHidden bool) ([]MGMailingList, error) {
 
 	for listIterator.Next(ctx, &page) {
 		for _, list := range page {
-			hideElement := isHidden(&list)
+			hideElement := isHidden(list.Address)
 			if includeHidden == true || (includeHidden == false && hideElement == false) {
-				lists = append(lists, MGMailingList{&list, isSubscriptable(&list), hideElement})
+				lists = append(lists, MGMailingList{&list, isSubscriptable(list.Address), hideElement})
 			}
 		}
 	}
@@ -51,6 +51,10 @@ func Subscribe(listaddress string, memberaddress string) error {
 	err := mg.SetAPIBase(mailgun.APIBaseEU)
 	if err != nil {
 		return err
+	}
+
+	if isSubscriptable(listaddress) == false {
+		return ErrForbidden
 	}
 
 	// The entire operation should not take longer than 30 seconds
@@ -70,6 +74,10 @@ func Unsubscribe(listaddress string, memberaddress string) error {
 		return err
 	}
 
+	if isSubscriptable(listaddress) == false {
+		return ErrForbidden
+	}
+
 	// The entire operation should not take longer than 30 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
@@ -79,12 +87,12 @@ func Unsubscribe(listaddress string, memberaddress string) error {
 	return err
 }
 
-func isSubscriptable(list *mtypes.MailingList) bool {
+func isSubscriptable(list string) bool {
 	blocked := envcfg.Values("MAILGUN_BLOCKED_MAILING_LISTS")
-	return !slices.Contains(blocked, list.Address)
+	return !slices.Contains(blocked, list)
 }
 
-func isHidden(list *mtypes.MailingList) bool {
+func isHidden(list string) bool {
 	hidden := envcfg.Values("MAILGUN_HIDDEN_MAILING_LISTS")
-	return slices.Contains(hidden, list.Address)
+	return slices.Contains(hidden, list)
 }
