@@ -1,4 +1,4 @@
-package mailgun
+package mailinglist
 
 import (
 	"context"
@@ -12,16 +12,16 @@ import (
 var domain = envcfg.Value("MAILGUN_DOMAIN")
 var apiKey = envcfg.Value("MAILGUN_API_KEY")
 
-func MailingLists() []string {
+func Lists() ([]mtypes.MailingList, error) {
 	mg := mailgun.NewMailgun(apiKey)
 	err := mg.SetAPIBase(mailgun.APIBaseEU)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	listIterator := mg.ListMailingLists(&mailgun.ListOptions{Limit: 100})
 
-	var lists []string
+	var lists []mtypes.MailingList
 
 	var page []mtypes.MailingList
 	// The entire operation should not take longer than 30 seconds
@@ -30,8 +30,8 @@ func MailingLists() []string {
 
 	for listIterator.Next(ctx, &page) {
 		for _, list := range page {
-			lists = append(lists, list.Address)
+			lists = append(lists, list)
 		}
 	}
-	return lists
+	return lists, nil
 }
