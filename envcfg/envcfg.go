@@ -1,9 +1,10 @@
-package config
+package envcfg
 
 import (
-	_ "github.com/joho/godotenv/autoload"
 	"os"
 	"strings"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func Value(key string) string {
