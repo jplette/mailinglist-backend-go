@@ -1,4 +1,4 @@
-package mailinglist
+package common
 
 import "errors"
 

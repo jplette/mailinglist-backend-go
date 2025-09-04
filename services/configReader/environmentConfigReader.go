@@ -1,4 +1,4 @@
-package envcfg
+package configReader
 
 import (
 	"os"

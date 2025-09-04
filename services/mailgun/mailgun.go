@@ -1,8 +1,9 @@
-package mailinglist
+package mailgun
 
 import (
 	"context"
-	"mailinglist-backend-go/envcfg"
+	"mailinglist-backend-go/services/common"
+	"mailinglist-backend-go/services/configReader"
 	"slices"
 	"time"
 
@@ -10,8 +11,8 @@ import (
 	"github.com/mailgun/mailgun-go/v5/mtypes"
 )
 
-var domain = envcfg.Value("MAILGUN_DOMAIN")
-var apiKey = envcfg.Value("MAILGUN_API_KEY")
+var domain = configReader.Value("MAILGUN_DOMAIN")
+var apiKey = configReader.Value("MAILGUN_API_KEY")
 
 type MGMailingList struct {
 	*mtypes.MailingList
@@ -54,7 +55,7 @@ func Subscribe(listaddress string, memberaddress string) error {
 	}
 
 	if isSubscriptable(listaddress) == false {
-		return ErrForbidden
+		return common.ErrForbidden
 	}
 
 	// The entire operation should not take longer than 30 seconds
@@ -75,7 +76,7 @@ func Unsubscribe(listaddress string, memberaddress string) error {
 	}
 
 	if isSubscriptable(listaddress) == false {
-		return ErrForbidden
+		return common.ErrForbidden
 	}
 
 	// The entire operation should not take longer than 30 seconds
@@ -88,11 +89,11 @@ func Unsubscribe(listaddress string, memberaddress string) error {
 }
 
 func isSubscriptable(list string) bool {
-	blocked := envcfg.Values("MAILGUN_BLOCKED_MAILING_LISTS")
+	blocked := configReader.Values("MAILGUN_BLOCKED_MAILING_LISTS")
 	return !slices.Contains(blocked, list)
 }
 
 func isHidden(list string) bool {
-	hidden := envcfg.Values("MAILGUN_HIDDEN_MAILING_LISTS")
+	hidden := configReader.Values("MAILGUN_HIDDEN_MAILING_LISTS")
 	return slices.Contains(hidden, list)
 }
