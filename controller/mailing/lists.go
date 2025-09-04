@@ -50,16 +50,30 @@ func Subscribe(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the user is authorized
-		_, err := requestValidator.ValidateRequest(r)
+		claims, err := requestValidator.ValidateRequest(r)
 		if err != nil {
 			httpErrorUnauthorized(w, r, lg, err)
 			return
 		}
 
-		// If not admin, you can only subscribe yourself
-		// TODO: Add code to check if user is admin
+		err = r.ParseForm()
+		if err != nil {
+			httpErrorBadRequest(w, r, lg, fmt.Errorf("failed to parse form: %w", err))
+			return
+		}
 
-		err = mailgun.Subscribe("justatest@mailgun.wohnsinn-bessungen.de", "test@jakumba.com")
+		listAddress := r.Form.Get("list")
+		memberAddress := r.Form.Get("member")
+
+		user := requestValidator.CurrentUser(claims)
+		// If not admin, you can only subscribe yourself
+		if (user.Admin == false) && (memberAddress != user.Email) {
+			httpErrorBadRequest(w, r, lg, fmt.Errorf("only admins can (un)subscribe other users"))
+		}
+
+		// TODO: Check if the list is blocked
+
+		err = mailgun.Subscribe(listAddress, memberAddress)
 		if err != nil {
 			httpError(w, r, lg, fmt.Errorf("failed to subscribe to lists: %w", err))
 			return
@@ -73,16 +87,30 @@ func Unsubscribe(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the user is authorized
-		_, err := requestValidator.ValidateRequest(r)
+		claims, err := requestValidator.ValidateRequest(r)
 		if err != nil {
 			httpErrorUnauthorized(w, r, lg, err)
 			return
 		}
 
-		// If not admin, you can only subscribe yourself
-		// TODO: Add code to check if user is admin
+		err = r.ParseForm()
+		if err != nil {
+			httpErrorBadRequest(w, r, lg, fmt.Errorf("failed to parse form: %w", err))
+			return
+		}
 
-		err = mailgun.Unsubscribe("justatest@mailgun.wohnsinn-bessungen.de", "test@jakumba.com")
+		listAddress := r.Form.Get("list")
+		memberAddress := r.Form.Get("member")
+
+		user := requestValidator.CurrentUser(claims)
+		// If not admin, you can only subscribe yourself
+		if (user.Admin == false) && (memberAddress != user.Email) {
+			httpErrorBadRequest(w, r, lg, fmt.Errorf("only admins can (un)subscribe other users"))
+		}
+
+		// TODO: Check if the list is blocked
+
+		err = mailgun.Unsubscribe(listAddress, memberAddress)
 		if err != nil {
 			httpError(w, r, lg, fmt.Errorf("failed to unsubscribe from lists: %w", err))
 			return
@@ -114,4 +142,8 @@ func httpError(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err erro
 func httpErrorUnauthorized(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err error) {
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	lg.ErrorContext(r.Context(), "authorization failed", "error", err.Error())
+}
+
+func httpErrorBadRequest(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err error) {
+	http.Error(w, "Bad request", http.StatusBadRequest)
 }

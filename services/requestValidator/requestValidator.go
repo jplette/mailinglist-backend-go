@@ -14,6 +14,7 @@ type User struct {
 	Name     string
 	LastName string
 	Email    string
+	Admin    bool
 }
 
 func ValidateRequest(r *http.Request) (jwt.MapClaims, error) {
@@ -28,7 +29,7 @@ func ValidateRequest(r *http.Request) (jwt.MapClaims, error) {
 	return jwtValidator.ValidateToken(token[1], publicKey)
 }
 
-func IsAdmin(claims jwt.MapClaims) bool {
+func isAdmin(claims jwt.MapClaims) bool {
 	var groups []interface{}
 	groups = claims["groups"].([]interface{})
 
@@ -40,10 +41,11 @@ func IsAdmin(claims jwt.MapClaims) bool {
 	return false
 }
 
-func UserFromClaims(claims jwt.MapClaims) User {
+func CurrentUser(claims jwt.MapClaims) User {
 	return User{
 		Name:     claims["given_name"].(string),
 		LastName: claims["family_name"].(string),
 		Email:    claims["email"].(string),
+		Admin:    isAdmin(claims),
 	}
 }

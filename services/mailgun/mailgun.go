@@ -47,14 +47,14 @@ func Lists(includeHidden bool) ([]MGMailingList, error) {
 	return lists, nil
 }
 
-func Subscribe(listaddress string, memberaddress string) error {
+func Subscribe(listAddress string, memberAddress string) error {
 	mg := mailgun.NewMailgun(apiKey)
 	err := mg.SetAPIBase(mailgun.APIBaseEU)
 	if err != nil {
 		return err
 	}
 
-	if isSubscriptable(listaddress) == false {
+	if isSubscriptable(listAddress) == false {
 		return common.ErrForbidden
 	}
 
@@ -62,20 +62,20 @@ func Subscribe(listaddress string, memberaddress string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
-	subcribed := true
+	subscribed := true
 
-	err = mg.CreateMember(ctx, true, listaddress, mtypes.Member{Address: memberaddress, Subscribed: &subcribed})
+	err = mg.CreateMember(ctx, true, listAddress, mtypes.Member{Address: memberAddress, Subscribed: &subscribed})
 	return err
 }
 
-func Unsubscribe(listaddress string, memberaddress string) error {
+func Unsubscribe(listAddress string, memberAddress string) error {
 	mg := mailgun.NewMailgun(apiKey)
 	err := mg.SetAPIBase(mailgun.APIBaseEU)
 	if err != nil {
 		return err
 	}
 
-	if isSubscriptable(listaddress) == false {
+	if isSubscriptable(listAddress) == false {
 		return common.ErrForbidden
 	}
 
@@ -83,7 +83,7 @@ func Unsubscribe(listaddress string, memberaddress string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
-	err = mg.DeleteMember(ctx, memberaddress, listaddress)
+	err = mg.DeleteMember(ctx, memberAddress, listAddress)
 
 	return err
 }
