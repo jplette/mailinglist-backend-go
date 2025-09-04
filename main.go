@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"mailinglist-backend-go/controller"
+	"mailinglist-backend-go/controller/health"
 	"mailinglist-backend-go/controller/mailing"
 	"net/http"
 	"os"
@@ -35,7 +35,7 @@ func main() {
 
 func run(_ context.Context, cfg config) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", controller.Health)
+	mux.HandleFunc("/health", health.Ping)
 	mux.Handle("GET /lists", mailing.Lists(cfg.lg))
 	mux.Handle("GET /add", mailing.Subscribe(cfg.lg))
 	mux.Handle("GET /remove", mailing.Unsubscribe(cfg.lg))
