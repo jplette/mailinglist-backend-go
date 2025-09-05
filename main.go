@@ -6,7 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"mailinglist-backend-go/rest"
+	"mailinglist-backend-go/controller/health"
+	"mailinglist-backend-go/controller/mailing"
 	"net/http"
 	"os"
 )
@@ -34,7 +35,10 @@ func main() {
 
 func run(_ context.Context, cfg config) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", rest.Health)
+	mux.HandleFunc("/health", health.Ping)
+	mux.Handle("GET /lists", mailing.Lists(cfg.lg))
+	mux.Handle("POST /subscribe", mailing.Subscribe(cfg.lg))
+	mux.Handle("POST /unsubscribe", mailing.Unsubscribe(cfg.lg))
 
 	err := http.ListenAndServe(cfg.http.addr, mux)
 	if !errors.Is(err, http.ErrServerClosed) {

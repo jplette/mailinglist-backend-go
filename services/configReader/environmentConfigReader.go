@@ -1,4 +1,4 @@
-package envcfg
+package configReader
 
 import (
 	"os"
@@ -17,5 +17,5 @@ func Exists(key string) bool {
 }
 
 func Values(key string) []string {
-	return strings.Split(Value(key), ";")
+	return strings.Split(Value(key), ",")
 }
