@@ -56,14 +56,13 @@ func Subscribe(lg *slog.Logger) http.Handler {
 			return
 		}
 
-		err = r.ParseForm()
-		if err != nil {
+		listAddress := r.PostFormValue("list")
+		memberAddress := r.PostFormValue("member")
+
+		if listAddress == "" || memberAddress == "" {
 			httpErrorBadRequest(w, r, lg, fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
-
-		listAddress := r.Form.Get("list")
-		memberAddress := r.Form.Get("member")
 
 		user := requestValidator.CurrentUser(claims)
 		// If not admin, you can only subscribe yourself
@@ -75,7 +74,7 @@ func Subscribe(lg *slog.Logger) http.Handler {
 
 		err = mailgun.Subscribe(listAddress, memberAddress)
 		if err != nil {
-			httpError(w, r, lg, fmt.Errorf("failed to subscribe to lists: %w", err))
+			httpErrorBadRequest(w, r, lg, fmt.Errorf("failed to subsribe: %w", err))
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -93,14 +92,13 @@ func Unsubscribe(lg *slog.Logger) http.Handler {
 			return
 		}
 
-		err = r.ParseForm()
-		if err != nil {
+		listAddress := r.PostFormValue("list")
+		memberAddress := r.PostFormValue("member")
+
+		if listAddress == "" || memberAddress == "" {
 			httpErrorBadRequest(w, r, lg, fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
-
-		listAddress := r.Form.Get("list")
-		memberAddress := r.Form.Get("member")
 
 		user := requestValidator.CurrentUser(claims)
 		// If not admin, you can only subscribe yourself
@@ -112,7 +110,7 @@ func Unsubscribe(lg *slog.Logger) http.Handler {
 
 		err = mailgun.Unsubscribe(listAddress, memberAddress)
 		if err != nil {
-			httpError(w, r, lg, fmt.Errorf("failed to unsubscribe from lists: %w", err))
+			httpErrorBadRequest(w, r, lg, fmt.Errorf("failed to unsubsribe: %w", err))
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -145,5 +143,5 @@ func httpErrorUnauthorized(w http.ResponseWriter, r *http.Request, lg *slog.Logg
 }
 
 func httpErrorBadRequest(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err error) {
-	http.Error(w, "Bad request", http.StatusBadRequest)
+	http.Error(w, err.Error(), http.StatusBadRequest)
 }

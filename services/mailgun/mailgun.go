@@ -40,7 +40,7 @@ func Lists(includeHidden bool) ([]MGMailingList, error) {
 		for _, list := range page {
 			hideElement := isHidden(list.Address)
 			if includeHidden == true || (includeHidden == false && hideElement == false) {
-				lists = append(lists, MGMailingList{&list, isSubscriptable(list.Address), hideElement})
+				lists = append(lists, MGMailingList{&list, !isSubscriptable(list.Address), hideElement})
 			}
 		}
 	}
