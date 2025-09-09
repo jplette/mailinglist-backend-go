@@ -19,6 +19,7 @@ type User struct {
 
 func ValidateRequest(r *http.Request) (jwt.MapClaims, error) {
 	publicKey := configReader.Value("KEYCLOAK_PUBLIC_KEY")
+	publicKeyComplete := "-----BEGIN PUBLIC KEY-----\n" + publicKey + "\n-----END PUBLIC KEY-----"
 	bearerToken := r.Header.Get("Authorization")
 	token := strings.Split(bearerToken, "Bearer ")
 
@@ -26,7 +27,7 @@ func ValidateRequest(r *http.Request) (jwt.MapClaims, error) {
 		return nil, fmt.Errorf("No token found in header")
 	}
 
-	return jwtValidator.ValidateToken(token[1], publicKey)
+	return jwtValidator.ValidateToken(token[1], publicKeyComplete)
 }
 
 func isAdmin(claims jwt.MapClaims) bool {
