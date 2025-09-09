@@ -1,30 +1,40 @@
-# syntax=docker/dockerfile:1
+# ---------- Stage 1: Build ----------
+FROM golang:1.25-alpine AS builder
 
-# Build the application from source
-FROM golang:1.25 AS build-stage
-
+# Set the working directory
 WORKDIR /app
 
+# Ensure a portable, static-ish binary
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+
+# Copy and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY *.go ./
+# Copy the source code
+COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-mailinglist-backend
+# Build the Go application (strip debug info for smaller size)
+RUN go build -trimpath -ldflags="-s -w" -o myapp .
 
-# Run the tests in the container
-#FROM build-stage AS run-test-stage
-#RUN go test -v ./...
+# ---------- Stage 2: Final ----------
+FROM alpine:latest
 
-# Deploy the application binary into a lean image
-FROM gcr.io/distroless/base-debian11 AS docker-mailinglist-backend
+# Set the working directory
+WORKDIR /app
 
-WORKDIR /
+# Install runtime dependencies you actually need
+RUN apk add --no-cache ca-certificates tzdata
 
-COPY --from=build-stage /docker-mailinglist-backend /docker-mailinglist-backend
+# Create non-root user for security
+RUN addgroup -S appuser \
+ && adduser -S -G appuser -H -s /sbin/nologin appuser
 
-EXPOSE 8080
+# Copy the binary and set ownership
+COPY --from=builder --chown=appuser:appuser /app/myapp /app/myapp
 
-USER nonroot:nonroot
+# Run as non-root user
+USER appuser
 
-ENTRYPOINT ["/docker-mailinglist-backend"]
+# Set the entrypoint command
+ENTRYPOINT ["/app/myapp"]
