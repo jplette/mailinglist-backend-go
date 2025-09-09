@@ -11,7 +11,6 @@ import (
 	"github.com/mailgun/mailgun-go/v5/mtypes"
 )
 
-var domain = configReader.Value("MAILGUN_DOMAIN")
 var apiKey = configReader.Value("MAILGUN_API_KEY")
 
 type MGMailingList struct {
