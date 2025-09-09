@@ -21,7 +21,7 @@ type config struct {
 
 func main() {
 	var cfg config
-	flag.StringVar(&cfg.http.addr, "http.addr", "localhost:8080", "http listen address")
+	flag.StringVar(&cfg.http.addr, "http.addr", ":8080", "http listen address")
 	flag.Parse()
 
 	cfg.lg = slog.New(slog.NewJSONHandler(os.Stderr, nil)).With("app", "mailinglist-backend-go")
