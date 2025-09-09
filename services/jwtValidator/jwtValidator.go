@@ -12,7 +12,6 @@ import (
 
 func ValidateToken(tokenString, publicKeyString string) (jwt.MapClaims, error) {
 	// Decode the PEM-formatted public key
-	println(publicKeyString)
 	block, _ := pem.Decode([]byte(publicKeyString))
 	if block == nil {
 		return nil, errors.New("failed to decode PEM block containing the public key")
