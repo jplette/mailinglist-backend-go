@@ -1,6 +1,20 @@
 # mailinglist-backend-go
 A backend service to manage mailing list subscriptions with Mailgun.
 
+## Docker images via GitHub Actions
+This repo builds and pushes Docker images to Docker Hub via GitHub Actions:
+- On Release (published): pushes two tags to Docker Hub – `latest` and the release tag (e.g., `v1.2.3`).
+- On push to `main`: pushes a `dev` tag to Docker Hub.
+
+Configure the following GitHub repository secrets before running the workflows:
+- `DOCKERHUB_USERNAME`: Your Docker Hub username or organization.
+- `DOCKERHUB_TOKEN`: A Docker Hub access token or password.
+- `DOCKERHUB_REPO`: The full Docker Hub repository name, e.g., `yourname/mailinglist-backend-go`.
+
+The workflows are located at:
+- `.github/workflows/release-docker.yml`
+- `.github/workflows/dev-docker.yml`
+
 ## Swagger / OpenAPI documentation
 The project includes Swagger (OpenAPI) annotations and can generate a swagger.json file locally.
 
