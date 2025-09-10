@@ -14,13 +14,7 @@ import (
 // Lists returns an [http.Handler] that returns a list of mailing lists.
 func Lists(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Check if the user is authorized
-		_, err := requestValidator.ValidateRequest(r)
-		if err != nil {
-			httpErrorUnauthorized(w, r, lg, err)
-			return
-		}
+		// Authorization is handled by middleware
 
 		// Get the list of mailing lists
 		lists, err := mailgun.Lists(false)
@@ -49,8 +43,8 @@ func Lists(lg *slog.Logger) http.Handler {
 func Subscribe(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Check if the user is authorized
-		claims, err := requestValidator.ValidateRequest(r)
+		// Auth handled by middleware; fetch claims from context
+		claims, err := requestValidator.ClaimsFromRequest(r)
 		if err != nil {
 			httpErrorUnauthorized(w, r, lg, err)
 			return
@@ -85,8 +79,8 @@ func Subscribe(lg *slog.Logger) http.Handler {
 func Unsubscribe(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Check if the user is authorized
-		claims, err := requestValidator.ValidateRequest(r)
+		// Auth handled by middleware; fetch claims from context
+		claims, err := requestValidator.ClaimsFromRequest(r)
 		if err != nil {
 			httpErrorUnauthorized(w, r, lg, err)
 			return
