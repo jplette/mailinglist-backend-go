@@ -1,5 +1,19 @@
 package main
 
+//go:generate sh -c "which swag >/dev/null 2>&1 || go install github.com/swaggo/swag/cmd/swag@latest && swag init -g main.go -o ./swagger -ot json"
+
+// Mailing List Backend API
+//
+// @title           Mailing List Backend API
+// @version         1.0
+// @description     API for managing mailing lists and subscriptions backed by Mailgun.
+// @schemes         http https
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in              header
+// @name            Authorization
+// @description     Provide JWT token as: Bearer <token>
+
 import (
 	"context"
 	"errors"
