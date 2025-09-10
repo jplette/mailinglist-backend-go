@@ -19,6 +19,29 @@ type MGMailingList struct {
 	Hidden  bool `json:"hidden"`
 }
 
+// APIMailingList is a simplified model used for API documentation to avoid
+// referencing embedded external types that swag cannot inspect (mtypes.MailingList).
+// This structure reflects the JSON the API returns for each mailing list entry.
+//
+// swagger:model APIMailingList
+//
+// Note: The runtime response encodes MGMailingList which embeds fields from
+// mtypes.MailingList. The key fields commonly used are represented here.
+// Keep this in sync with the actual JSON output of MGMailingList.
+// If additional fields are needed in documentation, add them here accordingly.
+// The presence of this type is solely to help Swagger generation.
+//
+// Fields examples are illustrative; adjust as needed.
+//
+//nolint:revive // exported for swagger docs
+type APIMailingList struct {
+	Address     string `json:"address" example:"news@example.com"`
+	Name        string `json:"name,omitempty" example:"News"`
+	Description string `json:"description,omitempty" example:"General news and updates"`
+	Blocked     bool   `json:"blocked"`
+	Hidden      bool   `json:"hidden"`
+}
+
 func Lists(includeHidden bool) ([]MGMailingList, error) {
 	mg := mailgun.NewMailgun(apiKey)
 	err := mg.SetAPIBase(mailgun.APIBaseEU)

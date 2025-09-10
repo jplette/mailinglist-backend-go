@@ -11,6 +11,16 @@ import (
 	"net/http"
 )
 
+// Lists godoc
+// @Summary      Get mailing lists
+// @Description  Returns all mailing lists available to the system.
+// @Tags         mailing
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   mailgun.APIMailingList
+// @Failure      401  {string}  string  "Unauthorized"
+// @Failure      500  {string}  string  "Internal Server Error"
+// @Router       /lists [get]
 // Lists returns an [http.Handler] that returns a list of mailing lists.
 func Lists(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -40,6 +50,19 @@ func Lists(lg *slog.Logger) http.Handler {
 	})
 }
 
+// Subscribe godoc
+// @Summary      Subscribe a member to a list
+// @Description  Subscribes the specified member email to the given list address.
+// @Tags         mailing
+// @Accept       application/x-www-form-urlencoded
+// @Produce      json
+// @Security     BearerAuth
+// @Param        list    formData  string  true  "List address"
+// @Param        member  formData  string  true  "Member email"
+// @Success      200     {string}  string  "OK"
+// @Failure      400     {string}  string  "Bad Request"
+// @Failure      401     {string}  string  "Unauthorized"
+// @Router       /subscribe [post]
 func Subscribe(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -76,6 +99,19 @@ func Subscribe(lg *slog.Logger) http.Handler {
 	})
 }
 
+// Unsubscribe godoc
+// @Summary      Unsubscribe a member from a list
+// @Description  Unsubscribes the specified member email from the given list address.
+// @Tags         mailing
+// @Accept       application/x-www-form-urlencoded
+// @Produce      json
+// @Security     BearerAuth
+// @Param        list    formData  string  true  "List address"
+// @Param        member  formData  string  true  "Member email"
+// @Success      200     {string}  string  "OK"
+// @Failure      400     {string}  string  "Bad Request"
+// @Failure      401     {string}  string  "Unauthorized"
+// @Router       /unsubscribe [post]
 func Unsubscribe(lg *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
