@@ -2,7 +2,7 @@
 A backend service to manage mailing list subscriptions with Mailgun.
 
 ## Swagger / OpenAPI documentation
-The project includes Swagger (OpenAPI) annotations and can generate a swagger.json file both locally and automatically during the Docker image build.
+The project includes Swagger (OpenAPI) annotations and can generate a swagger.json file locally.
 
 ### Generate Swagger locally
 You can generate the Swagger JSON in the repository at `./swagger/swagger.json`.
@@ -23,23 +23,3 @@ Result:
 Notes:
 - Ensure you run the commands from the repository root (where `main.go` is).
 - If you update handler comments or add endpoints, re-run the command to refresh the spec.
-
-### Swagger generated during Docker build
-The Dockerfile is configured to generate the Swagger JSON during the image build. In the builder stage, it runs:
-
-- `swag init -g main.go -o ./swagger -ot json`
-
-The generated files are copied into the final image at `/app/swagger/swagger.json`.
-
-Example build and ways to access the file:
-
-- Build the image:
-  - `docker build -t mailinglist-backend-go:latest .`
-
-- Print the swagger.json from the built image:
-  - `docker run --rm mailinglist-backend-go:latest cat /app/swagger/swagger.json`
-
-- Or copy it out of a running container:
-  - `CID=$(docker create mailinglist-backend-go:latest)`
-  - `docker cp "$CID":/app/swagger/swagger.json ./swagger-from-image.json`
-  - `docker rm "$CID"`
