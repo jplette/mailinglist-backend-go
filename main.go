@@ -9,6 +9,7 @@ import (
 	"mailinglist-backend-go/controller/health"
 	"mailinglist-backend-go/controller/mailing"
 	"mailinglist-backend-go/services/configReader"
+	"mailinglist-backend-go/services/requestValidator"
 	"net/http"
 	"os"
 	"strings"
@@ -37,10 +38,12 @@ func main() {
 
 func run(_ context.Context, cfg config) error {
 	mux := http.NewServeMux()
+	// Unprotected health endpoint
 	mux.HandleFunc("/health", health.Ping)
-	mux.Handle("GET /lists", mailing.Lists(cfg.lg))
-	mux.Handle("POST /subscribe", mailing.Subscribe(cfg.lg))
-	mux.Handle("POST /unsubscribe", mailing.Unsubscribe(cfg.lg))
+	// Protected endpoints wrapped by authMiddleware
+	mux.Handle("GET /lists", authMiddleware(mailing.Lists(cfg.lg)))
+	mux.Handle("POST /subscribe", authMiddleware(mailing.Subscribe(cfg.lg)))
+	mux.Handle("POST /unsubscribe", authMiddleware(mailing.Unsubscribe(cfg.lg)))
 
 	// Setup CORS middleware with allowed origins from environment
 	allowed := configReader.Values("CORS_ALLOWED_ORIGINS")
@@ -51,6 +54,19 @@ func run(_ context.Context, cfg config) error {
 		return fmt.Errorf("server closed unexpectedly: %w", err)
 	}
 	return nil
+}
+
+// authMiddleware validates JWT from Authorization header and stores claims in context.
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		claims, err := requestValidator.ValidateRequest(r)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		ctx := requestValidator.WithClaims(r.Context(), claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 // corsMiddleware returns a middleware that sets CORS headers based on allowed origins.

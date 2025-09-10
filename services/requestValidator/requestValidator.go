@@ -1,6 +1,7 @@
 package requestValidator
 
 import (
+	"context"
 	"fmt"
 	"mailinglist-backend-go/services/configReader"
 	"mailinglist-backend-go/services/jwtValidator"
@@ -55,6 +56,31 @@ func ValidateRequest(r *http.Request) (jwt.MapClaims, error) {
 	}
 
 	return jwtValidator.ValidateToken(token[1], publicKeyComplete)
+}
+
+// Context helpers for attaching and retrieving claims set by auth middleware
+
+type ctxKey string
+
+var claimsCtxKey ctxKey = "jwtClaims"
+
+// WithClaims returns a new context with JWT claims stored
+func WithClaims(ctx context.Context, claims jwt.MapClaims) context.Context {
+	return context.WithValue(ctx, claimsCtxKey, claims)
+}
+
+// ClaimsFromContext extracts JWT claims from context
+func ClaimsFromContext(ctx context.Context) (jwt.MapClaims, bool) {
+	claims, ok := ctx.Value(claimsCtxKey).(jwt.MapClaims)
+	return claims, ok
+}
+
+// ClaimsFromRequest is a helper to extract claims from the request context
+func ClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
+	if claims, ok := ClaimsFromContext(r.Context()); ok {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("no claims in context")
 }
 
 func isAdmin(claims jwt.MapClaims) bool {
