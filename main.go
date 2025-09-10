@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 type config struct {
@@ -48,6 +49,8 @@ func run(_ context.Context, cfg config) error {
 	// Setup CORS middleware with allowed origins from environment
 	allowed := configReader.Values("CORS_ALLOWED_ORIGINS")
 	handler := corsMiddleware(allowed)(mux)
+	// Add logging middleware to log every request
+	handler = loggingMiddleware(cfg.lg)(handler)
 
 	err := http.ListenAndServe(cfg.http.addr, handler)
 	if !errors.Is(err, http.ErrServerClosed) {
@@ -120,4 +123,51 @@ func isOriginAllowed(origin string, allowed []string) bool {
 		}
 	}
 	return false
+}
+
+// loggingMiddleware logs request details and response status/duration using slog.
+func loggingMiddleware(lg *slog.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			rec := &statusRecorder{ResponseWriter: w}
+			next.ServeHTTP(rec, r)
+			dur := time.Since(start)
+			// Ensure status has a sensible default if WriteHeader/Write wasn't called
+			status := rec.status
+			if status == 0 {
+				status = http.StatusOK
+			}
+			lg.Info("request completed",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"status", status,
+				"bytes", rec.bytes,
+				"duration_ms", dur.Milliseconds(),
+				"remote", r.RemoteAddr,
+				"user_agent", r.UserAgent(),
+			)
+		})
+	}
+}
+
+// statusRecorder captures response status and size
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+	bytes  int
+}
+
+func (sr *statusRecorder) WriteHeader(code int) {
+	sr.status = code
+	sr.ResponseWriter.WriteHeader(code)
+}
+
+func (sr *statusRecorder) Write(b []byte) (int, error) {
+	if sr.status == 0 {
+		sr.status = http.StatusOK
+	}
+	n, err := sr.ResponseWriter.Write(b)
+	sr.bytes += n
+	return n, err
 }
