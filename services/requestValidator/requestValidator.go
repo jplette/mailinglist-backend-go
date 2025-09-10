@@ -17,9 +17,36 @@ type User struct {
 	Admin    bool
 }
 
+// normalizePublicKey takes the env value and returns a PEM-formatted public key string.
+// Supports three formats in KEYCLOAK_PUBLIC_KEY:
+// 1) Full PEM including BEGIN/END lines (possibly with \n escaped) -> used as-is (after unescaping \n)
+// 2) Single-line base64 body, no headers -> headers/footers will be added
+// 3) Multi-line body without headers (rare) -> headers/footers will be added
+func normalizePublicKey(raw string) string {
+	if raw == "" {
+		return raw
+	}
+
+	// Remove surrounding quotes if present (some .env examples quote the value)
+	trimmed := strings.TrimSpace(raw)
+	trimmed = strings.TrimPrefix(trimmed, "\"")
+	trimmed = strings.TrimSuffix(trimmed, "\"")
+
+	// Allow storing with literal \n sequences in .env
+	trimmed = strings.ReplaceAll(trimmed, "\\n", "\n")
+
+	// If already contains PEM header, assume it's complete
+	if strings.Contains(trimmed, "BEGIN PUBLIC KEY") && strings.Contains(trimmed, "END PUBLIC KEY") {
+		return trimmed
+	}
+
+	// Otherwise, wrap with PEM headers/footers (backward compatibility)
+	return "-----BEGIN PUBLIC KEY-----\n" + trimmed + "\n-----END PUBLIC KEY-----"
+}
+
 func ValidateRequest(r *http.Request) (jwt.MapClaims, error) {
 	publicKey := configReader.Value("KEYCLOAK_PUBLIC_KEY")
-	publicKeyComplete := "-----BEGIN PUBLIC KEY-----\n" + publicKey + "\n-----END PUBLIC KEY-----"
+	publicKeyComplete := normalizePublicKey(publicKey)
 	bearerToken := r.Header.Get("Authorization")
 	token := strings.Split(bearerToken, "Bearer ")
 
